@@ -1,0 +1,24 @@
+# CoolPath AI - Task Progress Tracker
+
+- [x] Phase 1: Environment & Project Scaffolding
+  - [x] 1.1 Generate directory structure (`app/`, `frontend/`, `tests/`, `app/models/`, `app/clients/`, `app/core/`, `app/api/`, `app/mcp/`)
+  - [x] 1.2 Write `requirements.txt` and `app/config.py` using Pydantic BaseSettings
+  - [x] 1.3 Initialize `task_list.md` and `progress.md` state trackers
+- [x] Phase 2: Spatial Indexing & FortyGuard Client
+  - [x] 2.1 Implement async `FortyGuardClient` in `app/clients/fortyguard.py` with mock microclimate simulator fallback
+  - [x] 2.2 Implement `H3GridManager` in `app/core/h3_grid.py` (Lat/Lon to H3 resolution 8/9 aggregation & GeoJSON generator)
+  - [x] 2.3 Write unit tests for H3 grid lookup logic
+- [x] Phase 3: Thermal Graph Routing Engine
+  - [x] 3.1 Construct graph engine in `app/core/routing_engine.py` using NetworkX
+  - [x] 3.2 Implement edge weight penalty formula: `Cost = Distance * (1 + alpha * max(0, Temp - Temp_threshold))`
+  - [x] 3.3 Implement `calculate_dual_routes()` returning baseline route vs. thermal-mitigated route + statistics
+- [x] Phase 4: API Gateway & MCP Server Integration
+  - [x] 4.1 Create FastAPI endpoints (`POST /api/v1/route`, `GET /api/v1/heatmap`, `GET /api/v1/scenarios`, `GET /api/v1/health`)
+  - [x] 4.2 Implement `fastmcp` server tools in `app/mcp/server.py` (`find_heat_safe_route`, `get_area_heat_risk`)
+- [x] Phase 5: Interactive Visual Dashboard
+  - [x] 5.1 Build `frontend/index.html`, `frontend/style.css`, and `frontend/app.js` with Leaflet + CartoDB Dark Matter
+  - [x] 5.2 Render H3 thermal heatmap layer + dual-route polyline comparison
+  - [x] 5.3 Implement sidebar metrics UI (temperature saved, delta distance, profile picker, heat elevation chart)
+- [x] Phase 6: Verification & Test Suite
+  - [x] 6.1 Run full Pytest test suite (11/11 tests passing)
+  - [x] 6.2 Test live HTTP API endpoints and verified frontend dashboard serving
