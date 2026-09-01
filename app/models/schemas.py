@@ -76,10 +76,11 @@ class RouteRequest(BaseModel):
 
 class RefugePoint(BaseModel):
     """Micro-refuge or cooling node along the route trajectory."""
+    id: Optional[str] = Field(default=None, description="Unique identifier")
     name: str
     type: str = Field(..., description="'Indoor Municipal Cooling Hub', 'Misting Station', 'Transit Breezeway'")
     coordinate: GeoCoordinate
-    distance_along_route_m: float
+    distance_along_route_m: float = Field(default=0.0, description="Meters along route")
     recommended_rest_minutes: float
     temp_celsius: float
     core_temp_reset_celsius: float
@@ -89,9 +90,10 @@ class FleetDegradationMetrics(BaseModel):
     """Fleet EV battery & refrigeration compressor degradation and economic impact."""
     ev_battery_cooling_overhead_kwh: float
     refrigeration_aux_power_kwh: float
-    estimated_battery_cell_degradation_cost_usd: float
+    battery_cell_degradation_pct: float = Field(default=0.0, description="Battery capacity fade percentage")
+    estimated_battery_cell_degradation_cost_usd: float = Field(default=0.0, description="Estimated battery replacement share")
     total_delivery_cooling_cost_usd: float
-    co2_cooling_emissions_saved_g: float
+    co2_cooling_emissions_saved_g: float = Field(default=0.0, description="Estimated CO2 emissions prevented in grams")
 
 
 class ThermalProfilePoint(BaseModel):

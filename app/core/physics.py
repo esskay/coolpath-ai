@@ -300,5 +300,7 @@ def calculate_fleet_degradation_roi(
         ev_battery_cooling_overhead_kwh=round(battery_energy_kwh, 3),
         refrigeration_aux_power_kwh=round(refrigeration_aux_kwh, 3),
         battery_cell_degradation_pct=cell_degradation_pct,
-        total_delivery_cooling_cost_usd=total_cost_usd
+        estimated_battery_cell_degradation_cost_usd=round(battery_wear_cost_usd, 2),
+        total_delivery_cooling_cost_usd=total_cost_usd,
+        co2_cooling_emissions_saved_g=round(battery_energy_kwh * 385.0, 1)
     )
