@@ -10,7 +10,7 @@ async def test_dashboard_visual_and_functional():
     """Execute end-to-end verification of CoolPath AI 4D dashboard using Playwright."""
     os.makedirs("screenshots", exist_ok=True)
 
-    chrome_path = "/home/shirsh/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    chrome_path = os.path.expanduser("~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome")
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(

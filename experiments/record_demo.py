@@ -86,7 +86,7 @@ async def set_demo_caption(page, badge: str, title: str, subtitle: str, duration
 
 async def main():
     os.makedirs("recordings", exist_ok=True)
-    chrome_path = "/home/shirsh/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome"
+    chrome_path = os.path.expanduser("~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome")
 
     print("🚀 Launching Playwright with video capture (1920x1080)...")
     async with async_playwright() as p:
