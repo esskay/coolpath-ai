@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoolPath AI | 4D Hyperlocal Thermal Routing & Microclimate Engine</title>
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#f43f5e',
+              violet: '#8b5cf6',
+              dark: '#0b0f19',
+              card: '#111827',
+              border: '#1f293d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-[#0b0f19] text-slate-100 font-sans min-h-screen overflow-hidden flex flex-col">
+
+  <!-- TOP APP BAR -->
+  <header class="h-16 border-b border-slate-800/80 bg-[#0f172a]/90 backdrop-blur-md px-6 flex items-center justify-between z-30 shrink-0 shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 p-[2px] shadow-lg shadow-cyan-500/20">
+        <div class="h-full w-full bg-[#0b0f19] rounded-[10px] flex items-center justify-center">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-cyan-400"></i>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+            CoolPath AI
+          </h1>
+          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800/50">
+            FortyGuard '26
+          </span>
+          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800/50">
+            4D Microclimate
+          </span>
+        </div>
+        <p class="text-xs text-slate-400">Physiological Thermoregulation & Solar Canyon Routing</p>
+      </div>
+    </div>
+
+    <!-- PRESET SCENARIO SELECTOR -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5 shadow-inner">
+        <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+        <span class="text-xs text-slate-400 font-medium">Scenario:</span>
+        <select id="scenarioSelector" class="bg-transparent text-xs font-semibold text-cyan-300 focus:outline-none cursor-pointer">
+          <option value="phoenix_downtown" class="bg-slate-900 text-slate-100">Phoenix Heat Corridor (USA)</option>
+          <option value="dubai_marina" class="bg-slate-900 text-slate-100">Dubai Marina Coastal (UAE)</option>
+          <option value="austin_east" class="bg-slate-900 text-slate-100">Austin Eastside Logistics (USA)</option>
+        </select>
+      </div>
+
+      <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-cyan-300 text-xs font-mono">
+        <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-400 animate-spin-slow"></i>
+        <span id="solarPositionChip">Elev: 52.4° | Azimuth: 218°</span>
+      </div>
+
+      <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span id="apiStatusText" class="font-medium">FortyGuard 2m Engine: Active</span>
+      </div>
+
+      <button id="calculateRouteBtn" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-semibold text-xs transition-all shadow-md shadow-cyan-500/20 active:scale-95 cursor-pointer">
+        <i data-lucide="navigation-2" class="w-4 h-4"></i>
+        <span>Compute 4D CoolPath</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT GRID -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT FLOATING CONFIG & CONTROLS SIDEBAR -->
+    <aside class="w-[410px] border-r border-slate-800/80 bg-[#0f172a]/95 backdrop-blur-xl flex flex-col z-20 overflow-y-auto shrink-0 shadow-2xl custom-scrollbar">
+      
+      <!-- CONTROLS CONTAINER -->
+      <div class="p-5 space-y-5">
+
+        <!-- 4D TIME OF DAY & SOLAR CANYON SLIDER -->
+        <div class="bg-gradient-to-r from-amber-950/40 to-slate-900 border border-amber-900/40 rounded-2xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <i data-lucide="sun-medium" class="w-4 h-4 text-amber-400"></i>
+              4D Solar Time of Departure
+            </span>
+            <span id="departureTimeLabel" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800">
+              14:00 (2:00 PM)
+            </span>
+          </div>
+          <input id="timeSlider" type="range" min="8.0" max="18.0" step="0.5" value="14.0" class="w-full accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <div class="flex justify-between text-[10px] text-slate-400">
+            <span>08:00 (Morning Low Angle)</span>
+            <span>12:00 (Peak Zenith)</span>
+            <span>18:00 (Long Canyon Shadows)</span>
+          </div>
+        </div>
+
+        <!-- WORKER / FLEET PROFILE PICKER -->
+        <div>
+          <label class="text-xs font-semibold text-slate-300 flex items-center justify-between mb-2">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="user-check" class="w-3.5 h-3.5 text-cyan-400"></i>
+              Physiological Profile & Transit Mode
+            </span>
+            <span id="profileBadge" class="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">Cyclist (280W)</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="profile-btn active" data-profile="courier_cyclist">
+              <i data-lucide="bike" class="w-4 h-4 mb-1 text-cyan-400"></i>
+              <span class="text-[11px] font-medium leading-tight">E-Bike Courier<br><span class="text-[9px] text-slate-400">Marcus (280W)</span></span>
+            </button>
+            <button class="profile-btn" data-profile="pedestrian">
+              <i data-lucide="footprints" class="w-4 h-4 mb-1 text-slate-400"></i>
+              <span class="text-[11px] font-medium leading-tight">Walking Transit<br><span class="text-[9px] text-slate-400">Elena (140W)</span></span>
+            </button>
+            <button class="profile-btn" data-profile="construction_outdoor">
+              <i data-lucide="hard-hat" class="w-4 h-4 mb-1 text-slate-400"></i>
+              <span class="text-[11px] font-medium leading-tight">Road Crew<br><span class="text-[9px] text-slate-400">Field (340W)</span></span>
+            </button>
+            <button class="profile-btn" data-profile="heavy_fleet">
+              <i data-lucide="truck" class="w-4 h-4 mb-1 text-slate-400"></i>
+              <span class="text-[11px] font-medium leading-tight">EV Delivery Fleet<br><span class="text-[9px] text-slate-400">Cold Chain</span></span>
+            </button>
+            <button class="profile-btn col-span-2" data-profile="vulnerable_citizen">
+              <i data-lucide="heart-pulse" class="w-4 h-4 mb-1 text-slate-400"></i>
+              <span class="text-[11px] font-medium leading-tight">Vulnerable Citizen<br><span class="text-[9px] text-slate-400">Elderly / Child (High Sensitivity)</span></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- BREAKTHROUGH FEATURE TOGGLES -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- REFUGES TOGGLE -->
+          <div class="bg-slate-900/90 border border-cyan-900/40 rounded-xl p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-bold text-cyan-300 flex items-center gap-1">
+                <i data-lucide="umbrella" class="w-3.5 h-3.5 text-cyan-400"></i>
+                Micro-Refuges
+              </span>
+              <input type="checkbox" id="toggleRefuges" checked class="accent-cyan-400 cursor-pointer">
+            </div>
+            <p class="text-[10px] text-slate-400">Auto-inject cooling oasis stops if core strain spikes.</p>
+          </div>
+
+          <!-- COLD-CHAIN / FLEET ROI TOGGLE -->
+          <div class="bg-slate-900/90 border border-emerald-900/40 rounded-xl p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-bold text-emerald-300 flex items-center gap-1">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-400"></i>
+                EV Battery & ROI
+              </span>
+              <input type="checkbox" id="toggleColdChain" class="accent-emerald-400 cursor-pointer">
+            </div>
+            <p class="text-[10px] text-slate-400">Calculate Li-ion cell strain & chiller energy savings.</p>
+          </div>
+        </div>
+
+        <!-- THERMAL PARAMETERS SLIDERS -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Thermal Cost Tuning
+            </span>
+            <button id="resetParamsBtn" class="text-[10px] text-slate-400 hover:text-cyan-400 transition-colors">Reset</button>
+          </div>
+
+          <!-- ALPHA SLIDER -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400 flex items-center gap-1">
+                Heat Aversion Weight (&alpha;)
+                <span class="text-[10px] text-slate-500" title="Multiplier scaling penalty for temperature above threshold">ℹ️</span>
+              </span>
+              <span id="alphaVal" class="font-mono font-bold text-cyan-400">1.8</span>
+            </div>
+            <input id="alphaSlider" type="range" min="0.0" max="5.0" step="0.1" value="1.8" class="w-full accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+              <span>0.0 (Pure Distance)</span>
+              <span>5.0 (Maximum Shade/Cool)</span>
+            </div>
+          </div>
+
+          <!-- TEMP THRESHOLD SLIDER -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400 flex items-center gap-1">
+                Heat Stress Threshold (T<sub>crit</sub>)
+              </span>
+              <span id="threshVal" class="font-mono font-bold text-amber-400">33.0°C</span>
+            </div>
+            <input id="threshSlider" type="range" min="26.0" max="42.0" step="0.5" value="33.0" class="w-full accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <!-- LAYER CONTROLS & BASEMAP -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+          <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-violet-400"></i>
+            Spatial Layers & Basemap
+          </span>
+          <div class="flex items-center justify-between text-xs text-slate-300">
+            <span>Uber H3 2m Microclimate Layer</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="toggleHeatmap" checked class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+            </label>
+          </div>
+
+          <!-- MAP THEME SELECTOR -->
+          <div class="flex items-center justify-between text-xs text-slate-300 pt-1">
+            <span>Basemap Provider</span>
+            <select id="mapThemeSelector" class="bg-slate-950 border border-slate-800 text-[11px] font-medium text-cyan-300 rounded-lg px-2 py-1 focus:outline-none cursor-pointer">
+              <option value="osm_dark">OpenStreetMap (Dark Mode)</option>
+              <option value="osm_standard">OpenStreetMap (Standard)</option>
+              <option value="opentopo">OpenTopoMap (Topography)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- PHYSIOLOGICAL HEAT STRAIN CARD -->
+        <div class="bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-900 border border-cyan-800/40 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+              <i data-lucide="heart" class="w-4 h-4 text-rose-400 animate-pulse"></i>
+              Human Physiological Stress Index
+            </span>
+            <span id="cardiacMitigationBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+              -42% Strain
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Mean Feels-Like (UTCI)</span>
+              <span id="coolUtciTemp" class="text-base font-bold font-mono text-cyan-300">--°C</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Est. Peak Core Temp</span>
+              <span id="coolCoreTemp" class="text-base font-bold font-mono text-emerald-400">37.2°C</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Shaded Canyon Gain</span>
+              <span id="coolShadeGain" class="font-mono font-medium text-amber-300">+-- m</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Shade Coverage %</span>
+              <span id="coolShadePct" class="font-mono font-medium text-slate-200">--%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLEET & ECONOMIC ROI IMPACT CARD (OPTIONAL / TOGGLEABLE) -->
+        <div id="fleetMetricsContainer" class="hidden bg-slate-900/90 border border-emerald-800/40 rounded-2xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <i data-lucide="badge-dollar-sign" class="w-4 h-4 text-emerald-400"></i>
+              Fleet Economics & Battery Health
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">ROI Calc</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 block">Cooling Energy Saved</span>
+              <span id="fleetEnergySaved" class="font-mono font-bold text-emerald-300">0.00 kWh</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Cell Wear Cost Saved</span>
+              <span id="fleetCostSaved" class="font-mono font-bold text-emerald-300">$0.00 / trip</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROUTE COMPARISON CARDS -->
+        <div class="space-y-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <i data-lucide="git-compare" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Dual Route Diagnostics
+          </h2>
+
+          <!-- COOLPATH WIN CARD -->
+          <div class="bg-gradient-to-br from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-800/60 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                CoolPath AI Route
+              </span>
+              <span id="coolStressBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700">Moderate</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Mean Surface Temp</span>
+                <span id="coolMeanTemp" class="text-lg font-bold font-mono text-emerald-300">--°C</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Peak Heat Corridor</span>
+                <span id="coolPeakTemp" class="text-lg font-bold font-mono text-emerald-400">--°C</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Total Distance</span>
+                <span id="coolDistance" class="font-mono font-medium text-slate-200">-- m</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Est. Duration</span>
+                <span id="coolDuration" class="font-mono font-medium text-slate-200">-- min</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BASELINE STANDARD CARD -->
+          <div class="bg-slate-900/80 border border-rose-900/40 rounded-2xl p-4 relative overflow-hidden shadow">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                Standard Shortest (Baseline)
+              </span>
+              <span id="baseStressBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">Severe</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Mean Surface Temp</span>
+                <span id="baseMeanTemp" class="text-lg font-bold font-mono text-rose-400">--°C</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Peak Heat Corridor</span>
+                <span id="basePeakTemp" class="text-lg font-bold font-mono text-rose-500">--°C</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Total Distance</span>
+                <span id="baseDistance" class="font-mono font-medium text-slate-300">-- m</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Est. Duration</span>
+                <span id="baseDuration" class="font-mono font-medium text-slate-300">-- min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HACKATHON FOOTER -->
+        <div class="pt-4 border-t border-slate-800/80 text-center">
+          <p class="text-[10px] text-slate-500 font-medium">Built for Hackathon 2026</p>
+          <p class="text-[9px] text-slate-600">Powered by FortyGuard 2m Microclimate API &bull; OpenStreetMap</p>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- CENTER MAP CANVAS -->
+    <main class="flex-1 relative flex flex-col overflow-hidden">
+      
+      <!-- LEAFLET MAP CONTAINER -->
+      <div id="map" class="h-full w-full bg-[#0a0e17] z-10"></div>
+
+      <!-- MAP INSTRUCTIONS OVERLAY CHIP -->
+      <div class="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-xl px-3.5 py-2 shadow-xl flex items-center gap-3 pointer-events-auto">
+        <div class="flex items-center gap-2 text-xs text-slate-300">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 ring-4 ring-cyan-400/20"></span>
+          <span><strong>Drag Pins</strong> or click map to change Origin/Destination</span>
+        </div>
+      </div>
+
+      <!-- BOTTOM THERMAL PROFILE DRAWER / CHART -->
+      <div id="analyticsDrawer" class="absolute bottom-4 left-4 right-4 z-20 bg-slate-900/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-4 shadow-2xl transition-all">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <h2 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i>
+              4D Multi-Layer Thermal Trajectory & Core Strain
+            </h2>
+            <span id="heatReductionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60">
+              -6.2°C Peak Heat Avoided
+            </span>
+          </div>
+
+          <!-- DELTA GAUGES SUMMARY ROW -->
+          <div class="flex items-center gap-4 text-xs font-mono">
+            <div class="flex items-center gap-1.5 text-emerald-400 font-bold">
+              <i data-lucide="trending-down" class="w-3.5 h-3.5"></i>
+              <span id="deltaHeatSaved">76% Heat Exposure Mitigated</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-slate-400">
+              <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span id="deltaDistance">+120m (+4.1% distance)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHART CANVAS -->
+        <div class="h-28 w-full">
+          <canvas id="thermalChart"></canvas>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
