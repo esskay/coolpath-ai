@@ -93,30 +93,7 @@ Traditional mapping engines (Google Maps, OSRM, Apple Maps) optimize exclusively
                                   └──────────────────────────────┘
 ```
 
----
 
-## 🚀 Quickstart
-
-### Prerequisites
-- Python 3.10+
-- Virtual environment (`venv`)
-
-### 1. Clone & Setup
-```bash
-git clone https://github.com/your-team/coolpath-ai.git
-cd coolpath-ai
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment (Optional)
-```bash
-cp .env.example .env
-# Optional: Add your FortyGuard API key in .env
-# (If omitted, the built-in 2m physics simulation mock runs automatically)
-```
 
 ---
 
@@ -244,7 +221,7 @@ Returns API health, version, FortyGuard connection status, and active H3 resolut
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/your-team/coolpath-ai.git
+git clone https://github.com/esskay/coolpath-ai.git
 cd coolpath-ai
 
 python3 -m venv .venv
